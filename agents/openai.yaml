@@ -1,0 +1,4 @@
+interface:
+  display_name: "学术论文英译中"
+  short_description: "保留公式、表格和版式，将英文论文翻译为中文 PDF"
+  default_prompt: "Use $translate-academic-paper-zh to translate this academic paper into Chinese and deliver a verified PDF plus editable HTML."
