@@ -65,6 +65,24 @@ git pull --ff-only
 
 重新打开一个 Codex 任务后，Skill 会以 `translate-academic-paper-zh` 出现在可用 Skills 中。
 
+### WorkBuddy
+
+WorkBuddy 的个人 Skills 目录是 `~/.workbuddy/skills/`。克隆到该目录后即可在对话中直接调用：
+
+```powershell
+git clone https://github.com/Prozacc/translate-academic-paper-zh.git `
+  "$env:USERPROFILE\.workbuddy\skills\translate-academic-paper-zh"
+```
+
+若希望始终跟随仓库的最新版本，可以用目录联接代替克隆（Windows 不需要管理员权限）：
+
+```powershell
+cmd /c mklink /J "$env:USERPROFILE\.workbuddy\skills\translate-academic-paper-zh" `
+  "D:\path\to\translate-academic-paper-zh"
+```
+
+技能列表在会话启动时加载，安装或更新后新开一个会话即可看到。
+
 ## 使用方式
 
 显式调用：
@@ -99,11 +117,18 @@ git pull --ff-only
   → 建立论文专属术语表并保护不可翻译内容
   → 对文本节点去重、分批翻译并缓存
   → 生成语义化中文 HTML
+      （有 LaTeX 源码时：构建 → 量宽 → 切分 → 重建）
   → 渲染 A4 PDF
   → 自动验证结构和资源
+  → 量中文拉伸、检查样式覆盖
   → 渲染全部 PDF 页面并进行视觉检查
   → 打包 PDF、可编辑 HTML ZIP 和限制说明
 ```
+
+其中「构建 → 量宽 → 切分 → 重建」是公式流水线：Chrome 不会断开行内
+`<math>`，过宽的公式必须按顶层二元运算符切开，否则留在原行的短行会被
+两端对齐拉坏。细节见
+[`references/arxiv-latex-pipeline.md`](references/arxiv-latex-pipeline.md)。
 
 来源优先级：
 
@@ -203,6 +228,59 @@ python scripts/package_html.py \
 - 拒绝不安全的绝对路径或上级目录引用；
 - 在资源缺失时终止，而不是生成不完整的 ZIP。
 
+### 从 arXiv LaTeX 源码构建中文母版
+
+论文有官方 LaTeX 源码时，用这套脚本走完整流水线，详见
+[`references/arxiv-latex-pipeline.md`](references/arxiv-latex-pipeline.md)。
+
+```bash
+# 1. 构建：$...$ 转 MathML、编号行内公式、注入样式表
+python scripts/build_paper.py \
+  --parts work/parts \
+  --out outputs/Paper_zh.html \
+  --css assets/paper-zh.css \
+  --macros work/macros.json \
+  --refs work/refs.json
+
+# 2. 量出太宽、无法断行的行内公式
+python scripts/measure_inline.py \
+  --html outputs/Paper_zh.html \
+  --out work/split_ids.json
+
+# 3. 带 split_ids 重新构建并渲染
+python scripts/build_paper.py --parts work/parts --out outputs/Paper_zh.html \
+  --css assets/paper-zh.css --macros work/macros.json --refs work/refs.json \
+  --split-ids work/split_ids.json --assets work/assets
+python scripts/render_pdf.py \
+  --html outputs/Paper_zh.html \
+  --pdf outputs/Paper_zh.pdf
+```
+
+`scripts/latex_mathml.py` 是公式引擎：把 `$...$` 转成 MathML，并可按顶层二元运算符把过宽的行内公式切成多段、用 `<wbr>` 连接，让 Chrome 像 TeX 一样在运算符处断行。论文自定义宏写在 JSON 配置里（示例见 `scripts/macros.example.json`），不改动转换器本身。
+
+### 检查中文两端对齐是否把字拉坏
+
+```bash
+python scripts/measure_cjk_stretch.py \
+  --pdf path/to/translated.pdf
+```
+
+Chrome 两端对齐中文时走的是**字符级拉伸**。一行若只剩几个汉字加一个很宽的行内公式，剩余空档会全部摊到这几个汉字上，字距可达自然值的 2.5 倍。脚本按基线聚合 PDF 的逐字 bbox，计算相邻汉字的 advance 与字号之比，超过 1.55 即判定为缺陷。
+
+修法是**只把出问题的那一段设为左对齐**（`class="nojust"`），不要改全局对齐方式：`text-justify: inter-word` 会把空档灌进公式两侧仅有的几个空格，`none` 则让全文两端对齐率从约 28% 掉到约 2%。
+
+注意：DOM 几何与打印布局不一致，用 DOM 检测恒返回 0，必须量渲染后的 PDF。
+
+### 检查样式覆盖
+
+```bash
+python scripts/audit_css.py \
+  --html path/to/translated.html \
+  --css assets/paper-zh.css
+```
+
+列出文档用到的、样式表未定义的 class。未定义样式不会报错，只会退回浏览器默认值，在长文档里很容易漏看。
+
 ## 质量检查
 
 自动验证不能替代视觉检查。发布 PDF 前应将全部页面渲染成图片或联系表，并检查：
@@ -221,6 +299,9 @@ python scripts/package_html.py \
 - **表格数值可能不在文本层**。出版方 PDF 有时把表格画成矢量轮廓，抽取文本只能得到表题与坐标轴标签，单元格数据全部丢失。判断方法是对比每页的矢量绘图数量与文本量：绘图上百、文本几乎没有的页面，其表格必须按图像读取——渲染高分辨率切片逐格转录，再用正文引用的数值反向校验。
 - **组合字符会变成方框**。U+20D7（向量箭头）、U+0302（帽号）等在多数中文字体中没有字形，浏览器会画一个缺字方框。正文中不要直接写这些字符，改用内联 MathML 的 `<mover>`。
 - **MathML 表头跨行**。多级表头用 `rowspan` 时，行数要与层级数一致，否则指标列会整体错位。
+- **两端对齐会把中文拉成"豆腐块"**。Chrome 对中文的两端对齐是字符级拉伸，行尾若有很宽的行内公式，前面的几个汉字会被拉宽到 2.5 倍。用 `scripts/measure_cjk_stretch.py` 量渲染后的 PDF 检出，并把那一段设为左对齐。
+- **行内公式不会被 Chrome 断行**。`<math>` 是原子的行内盒，宽公式整体跳到下一行，留在原行的短行又会被拉伸。需按顶层二元运算符切开并用 `<wbr>` 连接，见 `scripts/latex_mathml.py` 与 `scripts/measure_inline.py`。
+- **先转义再打标记**。参考文献条目的斜体标记若在转义之后插入，`<em>` 会变成字面文本印在页面上。`scripts/build_paper.py` 已按正确顺序处理，自建脚本时务必注意。
 
 ## 目录结构
 
@@ -233,12 +314,20 @@ translate-academic-paper-zh/
 │  └─ paper-zh.css
 ├─ references/
 │  ├─ workflow.md
+│  ├─ arxiv-latex-pipeline.md
 │  ├─ terminology.md
 │  └─ quality-checklist.md
 └─ scripts/
    ├─ validate_delivery.py
    ├─ inspect_pdf.py
-   └─ package_html.py
+   ├─ package_html.py
+   ├─ latex_mathml.py
+   ├─ macros.example.json
+   ├─ build_paper.py
+   ├─ measure_inline.py
+   ├─ measure_cjk_stretch.py
+   ├─ render_pdf.py
+   └─ audit_css.py
 ```
 
 ## 当前边界

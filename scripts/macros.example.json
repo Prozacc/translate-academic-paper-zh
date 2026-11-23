@@ -1,0 +1,21 @@
+{
+  "_comment": "Example macro configuration for scripts/latex_mathml.py. Copy this file into the paper's working directory and adjust it. Order matters: a longer macro must be listed before a shorter prefix of it (masksub before mask).",
+  "wrappers": [
+    "camerareadyrevisionlast",
+    "camerareadyrevision"
+  ],
+  "arg_wrappers": [
+    "textcolor"
+  ],
+  "macros": [
+    ["\\\\masksub", "\\\\text{CP-MDA-Exact}"],
+    ["\\\\mask", "\\\\text{CP-MDA-Nested}"],
+    ["\\\\mis", "\\\\mathrm{mis}"],
+    ["\\\\obs", "\\\\mathrm{obs}"],
+    ["\\\\Tr", "\\\\mathrm{Tr}"],
+    ["\\\\Cal", "\\\\mathrm{Cal}"],
+    ["\\\\Test", "\\\\mathrm{Test}"],
+    ["\\\\test", "\\\\mathrm{test}"],
+    ["\\\\ind", "\\\\perp\\\\!\\\\!\\\\!\\\\perp\\\\!\\\\!\\\\!\\\\perp"]
+  ]
+}

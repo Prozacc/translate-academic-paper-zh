@@ -32,6 +32,11 @@ Produce a complete, terminology-consistent Chinese paper and verified deliverabl
 
 Read [references/workflow.md](references/workflow.md) for the extraction decision tree and source hierarchy.
 
+When the paper has an official LaTeX source, follow
+[references/arxiv-latex-pipeline.md](references/arxiv-latex-pipeline.md): it
+gives the reproducible path from the arXiv e-print to the deliverable, the
+build model, and the macro configuration that `latex2mathml` needs.
+
 ### 2. Inventory before translating
 
 Count and record:
@@ -83,6 +88,15 @@ Use semantic HTML as the default editable master because it preserves MathML, ta
 6. Use hanging indentation for references.
 7. Keep image files as separate assets referenced by relative paths.
 
+When the formulas come from LaTeX, build the master with
+`scripts/build_paper.py` rather than by hand: it converts every `$...$` to
+MathML, numbers the inline formulas so that later passes can refer to
+them, cuts the inline formulas that are too wide (Chrome never breaks an
+inline `<math>`, so a wide formula is pushed to the next line as a whole and
+the short line left behind is stretched by justification), and injects the
+shared stylesheet. See
+[references/arxiv-latex-pipeline.md](references/arxiv-latex-pipeline.md).
+
 Create DOCX only when requested or when the document has modest equation/table complexity. If conversion reduces fidelity, deliver HTML and state why DOCX was omitted.
 
 ### 5. Render the PDF
@@ -92,6 +106,10 @@ Render the editable master to A4 PDF with backgrounds enabled. Prefer the render
 - Test Paged.js only if already available and the document has no giant tables.
 - If Paged.js truncates content or drops tables, use browser-native A4 printing and verify every page.
 - Do not claim page-for-page equivalence when translation expansion changes pagination.
+
+`scripts/render_pdf.py` drives headless Chrome with the browser-native A4
+printer. It renders to a temporary file and moves it into place, so it never
+has to delete a PDF that a preview window still holds open.
 
 ### 6. Validate
 
@@ -107,7 +125,25 @@ Then inspect the rendered PDF:
 python scripts/inspect_pdf.py --pdf <translated.pdf> --output-dir work/pdf-check
 ```
 
+Then check the Chinese justification and the stylesheet coverage:
+
+```powershell
+python scripts/measure_cjk_stretch.py --pdf <translated.pdf>
+python scripts/audit_css.py --html <translated.html> --css assets/paper-zh.css
+```
+
 `validate_delivery.py` checks the HTML source: missing assets, structure counts, empty table cells, untranslated English prose, and combining marks that have no glyph in CJK font stacks. `inspect_pdf.py` checks the rendered result: blank pages, characters drawn with a missing-glyph box, images that failed to load, and replacement characters in the text layer. It also writes every page as a PNG plus 2x2 contact sheets for visual review.
+
+`measure_cjk_stretch.py` catches a defect that no other check sees: Chrome
+justifies Chinese by stretching the characters themselves, so a line that
+ends with a wide inline formula can leave its few Chinese characters more
+than twice their natural width. The script measures the advance of the
+neighbouring CJK glyphs in the rendered PDF. When it reports a ratio above
+1.55, set that one paragraph ragged-right (`class="nojust"`) - do not change
+the global justification mode, which would make every other paragraph worse.
+
+`audit_css.py` lists the classes the document uses but the stylesheet does
+not define; an unstyled class still renders, with the browser defaults.
 
 Then render every PDF page to images, assemble contact sheets, and inspect all pages. Spot-check the title, abstract, first paragraph of each major section, all captions, table headers, appendices, and the final reference.
 

@@ -67,3 +67,17 @@ Preserve reading order, section hierarchy, numbering, figure/table placement nea
 ## Paper-Translator compatibility
 
 Follow the practical principles of the Prozacc/Paper-Translator workflow: read the whole paper, create a terminology guide, build a semantic academic HTML document, preserve equations/tables, render to PDF, and report statistics and limitations. Treat any repository scripts as optional; use equivalent verified tooling when a referenced script is absent or unreliable.
+
+## Reproducible LaTeX pipeline
+
+When the paper has an official LaTeX source, follow
+[arxiv-latex-pipeline.md](arxiv-latex-pipeline.md). It describes the build
+model (translated fragments in `work/parts/`, formulas kept as LaTeX, one
+shared stylesheet), the macro configuration for `latex2mathml`, the
+measurement pass that decides which inline formulas must be cut so that
+Chrome can break them like TeX, and the Chinese-justification check that
+catches characters stretched by `text-align: justify`.
+
+The pipeline scripts are `scripts/latex_mathml.py`, `scripts/build_paper.py`,
+`scripts/measure_inline.py`, `scripts/measure_cjk_stretch.py`,
+`scripts/render_pdf.py` and `scripts/audit_css.py`.

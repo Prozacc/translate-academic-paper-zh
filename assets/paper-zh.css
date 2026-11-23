@@ -37,6 +37,7 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 {
   font-size: 22pt;
+  margin: 0 0 0.15em;
   text-align: center;
 }
 
@@ -51,11 +52,24 @@ h3 {
   font-size: 12.5pt;
 }
 
+h4 {
+  font-size: 11pt;
+}
+
 p {
   margin: 0.45em 0;
   orphans: 3;
   text-align: justify;
   widows: 3;
+}
+
+/* Chrome justifies CJK by stretching the characters themselves (the
+   `inter-ideograph` mode).  A line that ends with a wide inline formula leaves
+   too little room for the Chinese characters in front of it, so the whole
+   slack is poured into those few characters and they end up more than twice
+   their natural width.  Set such a paragraph ragged-right instead. */
+p.nojust {
+  text-align: left;
 }
 
 /* Title block ---------------------------------------------------------- */
@@ -72,6 +86,11 @@ p {
   font-family: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
   margin: 0.6em 0;
   text-align: center;
+}
+
+/* The affiliation markers next to the author names. */
+.authors sup {
+  font-size: 8pt;
 }
 
 .affil {
@@ -119,6 +138,32 @@ p {
   float: right;
   margin: 0.1em 0 0.6em 1em;
   width: 58mm;
+}
+
+/* Table of contents (optional navigation block) ------------------------- */
+
+.toc {
+  background: #fafafa;
+  border: 0.5pt solid #d6d6d6;
+  font-size: 9.6pt;
+  margin: 1em 0 1.4em;
+  padding: 0.8em 1.1em;
+}
+
+.toc h2 {
+  border: 0;
+  font-size: 11.5pt;
+  margin: 0 0 0.4em;
+  padding: 0;
+}
+
+.toc ol {
+  margin: 0.2em 0;
+  padding-left: 1.9em;
+}
+
+.toc li {
+  margin: 0.1em 0;
 }
 
 /* Figures -------------------------------------------------------------- */
@@ -242,23 +287,48 @@ math, .equation, .ltx_equation {
   max-width: 100%;
 }
 
+/* Three-column grid: the formula is centred in the text block and the number
+   lives in its own right-hand column, so a long formula can never collide
+   with its number the way an absolutely positioned label would. */
 .equation {
+  align-items: center;
+  column-gap: 0.4em;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   margin: 0.7em 0;
-  position: relative;
-  text-align: center;
 }
 
-.equation math {
+.equation > math {
   font-size: 1.02em;
+  grid-column: 2;
+  justify-self: center;
 }
 
 /* A display equation carries its number on the right margin. */
 .eqno {
+  align-self: center;
   font-size: 10pt;
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  grid-column: 3;
+  justify-self: end;
+}
+
+/* A multi-row display equation carries its number beside the last row. */
+.equation.multiline {
+  align-items: end;
+}
+
+.equation.multiline .eqno {
+  align-self: end;
+}
+
+/* Equations wider than the text block are scaled down so that they neither
+   overflow the margin nor collide with their own number. */
+.equation.long > math {
+  font-size: 0.8em;
+}
+
+.equation.long {
+  margin: 1em 0;
 }
 
 .eqnote {
@@ -266,6 +336,141 @@ math, .equation, .ltx_equation {
   font-size: 9pt;
   margin: -0.4em 0 0.8em;
   text-align: center;
+}
+
+/* Theorem-like blocks --------------------------------------------------- */
+
+.stmt {
+  break-inside: avoid-page;
+  border-left: 2.4pt solid #c9d4e2;
+  margin: 0.9em 0;
+  padding: 0.35em 0 0.35em 0.9em;
+}
+
+.stmt .head {
+  font-family: "Noto Sans SC", "Source Han Serif SC", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+}
+
+.stmt p {
+  margin: 0.3em 0;
+}
+
+.stmt.definition {
+  border-left-color: #d6c9a8;
+}
+
+.stmt.assumption {
+  border-left-color: #b9d6b4;
+}
+
+/* Proofs are long and must be allowed to split across pages, otherwise a
+   single long proof leaves a nearly empty page behind it. */
+.stmt.proof {
+  border-left-color: #e0c6c6;
+  break-inside: auto;
+}
+
+.stmt .proofhead {
+  font-family: "Noto Sans SC", "Source Han Serif SC", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+}
+
+.stmt .qed {
+  font-style: italic;
+}
+
+/* Algorithms ------------------------------------------------------------ */
+
+.algo {
+  border: 0.6pt solid #b9c2cc;
+  border-top: 2.2pt solid #7f8ea0;
+  break-inside: avoid-page;
+  margin: 1.1em auto;
+  max-width: 100%;
+}
+
+.algo .algohead {
+  background: #eef1f5;
+  border-bottom: 0.6pt solid #b9c2cc;
+  font-family: "Noto Sans SC", "Source Han Serif SC", "Microsoft YaHei", sans-serif;
+  font-size: 10pt;
+  font-weight: 700;
+  padding: 0.35em 0.7em;
+  text-align: center;
+}
+
+.algo ol {
+  font-size: 9.3pt;
+  line-height: 1.5;
+  margin: 0.5em 0 0.6em;
+  padding-left: 2.6em;
+}
+
+.algo ol li {
+  margin: 0.22em 0;
+}
+
+.algo .algoinput {
+  font-size: 9.3pt;
+  line-height: 1.5;
+  margin: 0.5em 0.7em 0.2em;
+}
+
+.algo .algoinput b {
+  font-weight: 700;
+}
+
+.algo .algooutput {
+  font-size: 9.3pt;
+  line-height: 1.5;
+  margin: 0.2em 0.7em 0.5em;
+}
+
+.algo .algooutput b {
+  font-weight: 700;
+}
+
+.algo .comment {
+  color: #4a6a8a;
+}
+
+.algo .kw {
+  font-weight: 700;
+}
+
+/* Figure built from labelled steps (e.g. a schematic pipeline) ----------- */
+
+.steps {
+  break-inside: avoid-page;
+  margin: 1em 0;
+}
+
+.step {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.7em;
+  margin: 0.45em 0;
+}
+
+.step .stepimg {
+  flex: 0 0 33%;
+  text-align: center;
+}
+
+.step .stepimg img {
+  height: auto;
+  max-width: 100%;
+}
+
+.step .steptext {
+  flex: 1 1 auto;
+  font-size: 9.4pt;
+  line-height: 1.5;
+}
+
+.step .stepno {
+  font-weight: 700;
 }
 
 /* Lists ---------------------------------------------------------------- */

@@ -39,13 +39,17 @@ Do not deliver until all applicable checks pass.
 - Every page has been rendered and visually inspected.
 - No blank page, clipped text, overlapping blocks, missing glyphs, broken image, or mojibake remains.
 - No character is drawn with a missing-glyph box. Vector arrows and hats are inline MathML, not raw combining characters.
+- No line has its Chinese characters stretched by justification. `scripts/measure_cjk_stretch.py` reports no line above a ratio of 1.55; such a paragraph is set ragged-right with `class="nojust"` instead of changing the global justification mode.
 - Headings do not appear alone at a page bottom when avoidable.
 - References use hanging indentation and URLs/DOIs remain usable.
+- No markup leaks into the rendered text: a reference entry must not display a literal `<em>` tag, and no page shows raw HTML entities.
 
 ## Automated checks
 
 - `scripts/validate_delivery.py --html <file> --pdf <file>` reports no errors.
 - `scripts/inspect_pdf.py --pdf <file> --output-dir <dir>` reports no errors and no blank pages.
+- `scripts/measure_cjk_stretch.py --pdf <file>` reports no stretched line.
+- `scripts/audit_css.py --html <file> --css assets/paper-zh.css` reports no class that the stylesheet leaves unstyled.
 - The page images and contact sheets produced by `inspect_pdf.py` have been reviewed.
 
 ## Delivery note
