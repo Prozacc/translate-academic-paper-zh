@@ -46,6 +46,8 @@ Count and record:
 
 Create a paper-specific glossary before bulk translation. Protect symbols, citations, URLs, dataset names, model names, code, units, and LaTeX/MathML tokens.
 
+Check that the text layer actually contains the table numbers. A publisher PDF may draw a table as vector outlines, in which case extraction returns the caption and the axis labels but no data. Detect this by comparing the number of vector drawings on a page against the amount of text on it; a page with hundreds of drawings and almost no text has tables that must be read visually. Read such tables by rendering the table region at high resolution and transcribing cell by cell, then check the transcription against the numbers quoted in the surrounding prose before publishing it. Never guess a value from context.
+
 ### 3. Translate structurally
 
 Translate titles, abstracts, headings, body paragraphs, list items, table headers/cells, figure captions, notes, and appendix prose. Preserve:
@@ -60,6 +62,14 @@ Translate titles, abstracts, headings, body paragraphs, list items, table header
 Use paragraph context. Apply the glossary consistently. Keep reference entries in their bibliographic language unless the user explicitly requests translated reference titles.
 
 Use [references/terminology.md](references/terminology.md) as a starter glossary, then extend it for the paper.
+
+Never type a vector arrow or a hat as a combining character in the body text. The characters U+20D7 and U+0302 have no glyph in most CJK font stacks, so the browser draws a replacement box instead of the mark. Express them as inline MathML instead:
+
+```html
+<math xmlns="http://www.w3.org/1998/Math/MathML"><mover accent="true"><mi>W</mi><mo>&#x2192;</mo></mover></math>
+```
+
+`scripts/validate_delivery.py` reports these characters before rendering, and `scripts/inspect_pdf.py` confirms after rendering that no replacement box was drawn.
 
 ### 4. Build the editable master
 
@@ -85,15 +95,25 @@ Render the editable master to A4 PDF with backgrounds enabled. Prefer the render
 
 ### 6. Validate
 
-Run:
+Run the source check:
 
 ```powershell
 python scripts/validate_delivery.py --html <translated.html> --pdf <translated.pdf>
 ```
 
+Then inspect the rendered PDF:
+
+```powershell
+python scripts/inspect_pdf.py --pdf <translated.pdf> --output-dir work/pdf-check
+```
+
+`validate_delivery.py` checks the HTML source: missing assets, structure counts, empty table cells, untranslated English prose, and combining marks that have no glyph in CJK font stacks. `inspect_pdf.py` checks the rendered result: blank pages, characters drawn with a missing-glyph box, images that failed to load, and replacement characters in the text layer. It also writes every page as a PNG plus 2x2 contact sheets for visual review.
+
 Then render every PDF page to images, assemble contact sheets, and inspect all pages. Spot-check the title, abstract, first paragraph of each major section, all captions, table headers, appendices, and the final reference.
 
 Use [references/quality-checklist.md](references/quality-checklist.md) as the release gate. Fix missing text, broken assets, clipping, blank pages, mojibake, inconsistent terms, and untranslated prose before delivery.
+
+Automation does not replace reading the pages. The scripts catch structural defects; only visual review catches a formula that reads wrong, a caption attached to the wrong figure, or a table whose numbers were transcribed from the wrong column.
 
 ### 7. Package and report
 
