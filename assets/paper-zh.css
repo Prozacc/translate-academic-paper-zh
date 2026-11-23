@@ -9,6 +9,7 @@
   --rule: #222;
   --soft-rule: #aaa;
   --abstract-bg: #f5f6f8;
+  --accent: #1f5fa9;
 }
 
 html {
@@ -16,6 +17,11 @@ html {
   font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
   font-size: 10.5pt;
   line-height: 1.65;
+  /* Combining marks such as U+20D7 (vector arrow) and U+0302 (hat) have no
+     glyph in most CJK fonts and render as tofu boxes. Prefer a Latin face for
+     them, and express accents with inline MathML instead of raw combining
+     characters. */
+  text-spacing-trim: normal;
 }
 
 body {
@@ -52,12 +58,70 @@ p {
   widows: 3;
 }
 
+/* Title block ---------------------------------------------------------- */
+
+.subtitle-en {
+  color: var(--muted);
+  font-size: 10pt;
+  font-style: italic;
+  margin: 0 0 1em;
+  text-align: center;
+}
+
+.authors {
+  font-family: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  margin: 0.6em 0;
+  text-align: center;
+}
+
+.affil {
+  color: var(--muted);
+  font-size: 9.5pt;
+  margin: 0.2em 0;
+  text-align: center;
+}
+
+.pubnote, .doi {
+  color: var(--muted);
+  font-size: 9pt;
+  text-align: center;
+}
+
+/* Abstract ------------------------------------------------------------- */
+
 .abstract, [role="doc-abstract"] {
   background: var(--abstract-bg);
-  border-left: 3pt solid #4b5563;
+  border-left: 3pt solid var(--rule);
   margin: 1.3em 0;
   padding: 0.8em 1.1em;
 }
+
+.abstract h2 {
+  border: 0;
+  font-size: 11.5pt;
+  margin: 0 0 0.4em;
+  padding: 0;
+}
+
+.idx {
+  font-size: 9.6pt;
+  margin: 0.4em 0 0;
+}
+
+.idx b {
+  font-family: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+}
+
+/* A teaser image inside the abstract box floats right and the abstract text
+   wraps around it. */
+.abstract img.teaser {
+  border: 0.5pt solid #b9c2cc;
+  float: right;
+  margin: 0.1em 0 0.6em 1em;
+  width: 58mm;
+}
+
+/* Figures -------------------------------------------------------------- */
 
 figure {
   break-inside: avoid-page;
@@ -77,6 +141,25 @@ figcaption, caption {
   line-height: 1.45;
   margin-top: 0.5em;
 }
+
+/* The original English caption, kept beside the translation. */
+.cap-en, .caption-en {
+  color: #444;
+  display: block;
+  font-size: 8.6pt;
+  font-weight: 400;
+  margin-top: 0.15em;
+}
+
+.fig-note {
+  color: var(--muted);
+  font-size: 8.8pt;
+  line-height: 1.5;
+  margin: 0.3em auto 0.9em;
+  max-width: 92%;
+}
+
+/* Tables --------------------------------------------------------------- */
 
 table {
   border-collapse: collapse;
@@ -101,16 +184,166 @@ tbody tr + tr td {
   border-top: 0.25pt solid #ddd;
 }
 
+/* Wide tables (many metric columns) need a smaller face and a fixed layout so
+   that no column is pushed outside the printable area. */
+table.wide {
+  font-size: 7.2pt;
+  table-layout: fixed;
+  width: 100%;
+}
+
+table.wide th, table.wide td {
+  overflow-wrap: break-word;
+  padding: 0.22em 0.18em;
+}
+
+table.wide .num {
+  font-variant-numeric: tabular-nums;
+}
+
+table.wide .grp {
+  font-size: 7pt;
+  line-height: 1.25;
+}
+
+table.wide .mth {
+  font-size: 7.2pt;
+  white-space: nowrap;
+}
+
+caption {
+  caption-side: top;
+  font-weight: 600;
+}
+
+/* Key/value table used by the provenance note. */
+.kv {
+  font-size: 9pt;
+  margin: 0.6em 0;
+}
+
+.kv td {
+  border-top: 0.25pt solid #ddd;
+  padding: 0.3em 0.5em;
+  text-align: left;
+  vertical-align: top;
+}
+
+.kv td:first-child {
+  color: var(--muted);
+  white-space: nowrap;
+  width: 22%;
+}
+
+/* Equations ------------------------------------------------------------ */
+
 math, .equation, .ltx_equation {
   break-inside: avoid-page;
   max-width: 100%;
 }
 
-.bibliography li, .ltx_bibitem {
+.equation {
+  margin: 0.7em 0;
+  position: relative;
+  text-align: center;
+}
+
+.equation math {
+  font-size: 1.02em;
+}
+
+/* A display equation carries its number on the right margin. */
+.eqno {
+  font-size: 10pt;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.eqnote {
+  color: #444;
+  font-size: 9pt;
+  margin: -0.4em 0 0.8em;
+  text-align: center;
+}
+
+/* Lists ---------------------------------------------------------------- */
+
+.bullets {
+  margin: 0.5em 0;
+  padding-left: 1.6em;
+}
+
+.bullets li {
+  margin: 0.25em 0;
+}
+
+.term {
+  font-weight: 600;
+}
+
+/* Bibliography --------------------------------------------------------- */
+
+.bibliography li, .ltx_bibitem, li.bib {
   margin: 0.3em 0;
   padding-left: 1.7em;
   text-indent: -1.7em;
 }
+
+.bibliography, .bibliography ol, .bibliography ul {
+  padding-left: 0;
+}
+
+.bibliography li .refnum {
+  font-weight: 600;
+}
+
+/* Author biographies --------------------------------------------------- */
+
+.bios {
+  break-inside: avoid-page;
+  margin: 1em 0;
+}
+
+.bio {
+  font-size: 9.5pt;
+  line-height: 1.6;
+  margin: 0.6em 0;
+  overflow: hidden;
+}
+
+.bio img {
+  border: 0.5pt solid #cfcfcf;
+  float: left;
+  margin: 0.2em 0.8em 0.3em 0;
+  width: 26mm;
+}
+
+/* Delivery note -------------------------------------------------------- */
+
+.provenance {
+  background: #fbfbfb;
+  border-left: 3pt solid var(--rule);
+  font-size: 9pt;
+  line-height: 1.65;
+  margin-top: 1.4em;
+  padding: 0.9em 1.1em;
+}
+
+.provenance h2 {
+  border: 0;
+  font-size: 11.5pt;
+  margin: 0 0 0.5em;
+  padding: 0;
+}
+
+.provenance h3 {
+  font-size: 10.5pt;
+  margin: 0.9em 0 0.3em;
+}
+
+/* Links ---------------------------------------------------------------- */
 
 a {
   color: inherit;
@@ -124,6 +357,18 @@ a {
   }
 
   table, figure, pre, blockquote {
+    break-inside: avoid-page;
+  }
+
+  /* Do not leave a heading alone at the bottom of a page. */
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid-page;
+  }
+
+  /* The abstract and the biography block are short enough to keep together.
+     The provenance note is deliberately allowed to break across pages: it is
+     long, and forcing it onto one page leaves a nearly empty trailing page. */
+  .abstract, .bios {
     break-inside: avoid-page;
   }
 }
