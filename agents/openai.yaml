@@ -1,4 +1,4 @@
 interface:
-  display_name: "Ñ§ÊõÂÛÎÄÓ¢ÒëÖĞ"
-  short_description: "±£Áô¹«Ê½¡¢±í¸ñºÍ°æÊ½£¬½«Ó¢ÎÄÂÛÎÄ·­ÒëÎªÖĞÎÄ PDF"
+  display_name: "å­¦æœ¯è®ºæ–‡è‹±è¯‘ä¸­"
+  short_description: "ä¿ç•™å…¬å¼ã€è¡¨æ ¼å’Œç‰ˆå¼ï¼Œå°†è‹±æ–‡è®ºæ–‡ç¿»è¯‘ä¸ºä¸­æ–‡ PDF"
   default_prompt: "Use $translate-academic-paper-zh to translate this academic paper into Chinese and deliver a verified PDF plus editable HTML."
