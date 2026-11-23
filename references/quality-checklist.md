@@ -22,7 +22,9 @@ Do not deliver until all applicable checks pass.
 
 - Math markup is preserved; subscripts, superscripts, Greek letters, operators, and equation numbers are correct.
 - Every table has the expected rows and columns.
+- Table values were read from a reliable source. If the PDF drew the table as vector outlines, every cell was transcribed from a high-resolution rendering and checked against the numbers quoted in the prose.
 - Headers and notes are translated.
+- Multi-level table headers use a `rowspan` that matches the number of header levels, so metric columns stay aligned under their group.
 - Wide tables are legible; if reduced or split across pages, the limitation is disclosed.
 
 ## Figures
@@ -36,8 +38,15 @@ Do not deliver until all applicable checks pass.
 - PDF opens without a password and has the expected number of pages.
 - Every page has been rendered and visually inspected.
 - No blank page, clipped text, overlapping blocks, missing glyphs, broken image, or mojibake remains.
+- No character is drawn with a missing-glyph box. Vector arrows and hats are inline MathML, not raw combining characters.
 - Headings do not appear alone at a page bottom when avoidable.
 - References use hanging indentation and URLs/DOIs remain usable.
+
+## Automated checks
+
+- `scripts/validate_delivery.py --html <file> --pdf <file>` reports no errors.
+- `scripts/inspect_pdf.py --pdf <file> --output-dir <dir>` reports no errors and no blank pages.
+- The page images and contact sheets produced by `inspect_pdf.py` have been reviewed.
 
 ## Delivery note
 
