@@ -11,6 +11,17 @@ Use the highest available level:
 
 Do not rebuild a structured paper from raw PDF text if matching source LaTeX or structured HTML is available.
 
+A digital PDF can still need the treatment reserved for scans. Some publishers draw tables as vector outlines: the text layer returns the caption and the axis labels but none of the cell values. This is not a scanned page and OCR is not the right answer either.
+
+Detect it per page by comparing the number of vector drawings against the amount of text. A page carrying hundreds of drawings and almost no text has tables whose values are only available as pixels. For each such table:
+
+1. Locate its bounding box from the horizontal and vertical rules.
+2. Render the region at high resolution in two halves so that each cell stays legible.
+3. Transcribe cell by cell, then cross-check against the numbers the surrounding prose quotes.
+4. Record the method in the delivery note.
+
+Never infer a value from the shape of the surrounding sentence, and never carry over a plausible-looking number that no rendering actually shows.
+
 ## Source identity
 
 Record the title, authors, publication venue or preprint identifier, version/date, page count, and SHA-256 hash of the actual input. If replacing an inaccessible attachment with an official copy, compare title and authors and disclose the replacement in the final note.
