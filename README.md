@@ -161,9 +161,32 @@ python scripts/validate_delivery.py \
 - 中文字符和残余英文概况；
 - 本地图片、样式等资源是否缺失；
 - Unicode 替换字符或潜在乱码；
+- 表格单元格是否为空；
+- 正文是否残留未翻译的英文段落；
+- 是否含有在中文字体中缺字形的组合字符（如 U+20D7、U+0302）；
 - PDF 是否存在、页数和加密状态。
 
 `pypdf` 可用时会检查 PDF 页数和加密状态；没有安装时，其余 HTML 检查仍然可以运行。
+
+加 `--strict` 时，残留英文与缺字形组合字符按错误处理并返回非零退出码，适合接入流水线。
+
+### 检查渲染后的 PDF
+
+```bash
+python scripts/inspect_pdf.py \
+  --pdf path/to/translated.pdf \
+  --output-dir work/pdf-check
+```
+
+脚本会：
+
+- 按墨迹率识别空白页与近乎空白的页；
+- 解码页面内容流，找出被画成缺字方框的字符；
+- 找出加载失败的图片（浏览器破图图标）；
+- 扫描文本层中的替换字符与私用区字符；
+- 把每一页渲染成 PNG，并生成 2×2 联系表，便于人工复核。
+
+需要 `pymupdf`；联系表还需要 `Pillow`。检查通过时退出码为 0，发现问题为 1。
 
 ### 打包可编辑 HTML
 
@@ -193,6 +216,12 @@ python scripts/package_html.py \
 
 完整发布检查清单见 [`references/quality-checklist.md`](references/quality-checklist.md)。
 
+## 已知陷阱
+
+- **表格数值可能不在文本层**。出版方 PDF 有时把表格画成矢量轮廓，抽取文本只能得到表题与坐标轴标签，单元格数据全部丢失。判断方法是对比每页的矢量绘图数量与文本量：绘图上百、文本几乎没有的页面，其表格必须按图像读取——渲染高分辨率切片逐格转录，再用正文引用的数值反向校验。
+- **组合字符会变成方框**。U+20D7（向量箭头）、U+0302（帽号）等在多数中文字体中没有字形，浏览器会画一个缺字方框。正文中不要直接写这些字符，改用内联 MathML 的 `<mover>`。
+- **MathML 表头跨行**。多级表头用 `rowspan` 时，行数要与层级数一致，否则指标列会整体错位。
+
 ## 目录结构
 
 ```text
@@ -208,6 +237,7 @@ translate-academic-paper-zh/
 │  └─ quality-checklist.md
 └─ scripts/
    ├─ validate_delivery.py
+   ├─ inspect_pdf.py
    └─ package_html.py
 ```
 
